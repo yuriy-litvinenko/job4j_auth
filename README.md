@@ -10,3 +10,5 @@ curl -H "Content-Type:application/json" -X POST -d"{\"login\":\"admin\",\"passwo
 curl -i -H "Content-Type:application/json" -X POST -d {\"login\":\"admin\",\"password\":\"qwerty\"} "http://localhost:8080/login"
 3. Получаем список всех пользователя с этим токеном
 curl -H "Authorization: Bearer xxx.yyy.zzz" http://localhost:8080/person/all
+4. Получаем с токеном пользователя по id
+curl -H "Authorization: Bearer xxx.yyy.zzz" http://localhost:8080/person/1
