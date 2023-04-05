@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -37,11 +38,26 @@ public class PersonController {
         return personService.getAll();
     }
 
+    @GetMapping("/find/all")
+    public ResponseEntity<String> findAll2() {
+        var body = personService.getAll().toString();
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Job4jPersonHeader", "job4j")
+                .contentType(MediaType.TEXT_PLAIN)
+                .contentLength(body.length())
+                .body(body);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Person> findById(@PathVariable int id) {
         return new ResponseEntity<>(this.personService.getById(id).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND, "Account is not found. Please, check requisites."
         )), HttpStatus.OK);
+    }
+
+    @GetMapping("/find/{id}")
+    public ResponseEntity<Person> findById2(@PathVariable int id) {
+        return ResponseEntity.of(this.personService.getById(id));
     }
 
     @PostMapping("/")
