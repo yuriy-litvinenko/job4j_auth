@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Person;
@@ -15,11 +17,14 @@ import ru.job4j.service.PersonService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/person")
@@ -98,6 +103,14 @@ public class PersonController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/sign-up-valid")
+    @Validated(Person.OnCreate.class)
+    public ResponseEntity<Void> signUpValid(@Valid @RequestBody Person person) {
+        person.setPassword(encoder.encode(person.getPassword()));
+        personService.save(person);
+        return ResponseEntity.ok().build();
+    }
+
     @ExceptionHandler(value = {IllegalArgumentException.class})
     public void exceptionHandler(Exception e, HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -110,6 +123,18 @@ public class PersonController {
             }
         }));
         LOGGER.error(e.getLocalizedMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handle(MethodArgumentNotValidException e) {
+        return ResponseEntity.badRequest().body(
+                e.getFieldErrors().stream()
+                        .map(f -> Map.of(
+                                f.getField(),
+                                String.format("%s. Actual value: %s", f.getDefaultMessage(), f.getRejectedValue())
+                        ))
+                        .collect(Collectors.toList())
+        );
     }
 
     @PatchMapping("/patch/{id}")
